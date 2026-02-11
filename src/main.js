@@ -8,6 +8,7 @@ const state = {
     lunch: null,
     activity: null,
     evening: null,
+    custom: ""
   },
 };
 
@@ -27,21 +28,39 @@ function render() {
 // --- screens ---
 function Intro() {
   const node = el(`
-    <div class="card fade-in">
-      <h1>Hi love ❤️</h1>
-      <p>
-        Happy Valentine’s Day… and happy birthday too (yes, I’m mixing them 😄).
-        I’m sorry this is a little delayed — but I wanted to make something small and
-        cute with my own hands (and a bit of code).
-      </p>
-      <p>
-        Today is already ours: you join me after my class, then we do lunch + a little adventure.
-        Ready?
-      </p>
-      <div class="row">
+    <div class="card fade-in hearts-bg">
+      <h1>Hi bubaa ❤️</h1>
+
+      <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-top:14px;">
+        <img
+          src="/us.jpeg"
+          alt="Us"
+          style="
+            width:150px;
+            height:150px;
+            object-fit:cover;
+            border-radius:20px;
+            border:1px solid rgba(20,10,30,0.15);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.15);
+          "
+        />
+
+        <div style="flex:1; min-width:220px;">
+          <p style="margin-top:0;">
+            I wanted to give you something on your birthday, but I wanted it to be done right.
+            Now I finally can. As we are meeting on Saturday, Happy Valentine’s Day too (yes, I’m mixing them 😄).
+            I’m sorry this is a little delayed but I wanted to make something small and cute with my own hands. I hope you like it :)
+          </p>
+          <p>
+            Valentine’s Day is already ours: you join me after my class, then we do lunch + a little adventure.
+            Ready?
+          </p>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:14px;">
         <button class="primary" id="startBtn">Open your surprise ✨</button>
       </div>
-      <p class="small">Tip: works best on phone too. (Try to catch the “No” button later 😈)</p>
     </div>
   `);
 
@@ -126,7 +145,12 @@ function Valentine() {
 }
 
 function Choices() {
-  const lunchOpts = ["Italian 🍝", "Japanese 🍜", "Sushi 🍣", "Surprise me 😌"];
+  const lunchOpts = [
+    "Italian 🍝",
+    "Ramen 🍜",
+    "Sushi 🍣",
+    "Spanish / Mediterranean 🥘"
+  ];
   const actOpts = [
     "Ceramics class 🏺",
     "Long walk together 🚶‍♀️🚶‍♂️",
@@ -135,8 +159,7 @@ function Choices() {
   ];
   const eveOpts = [
     "Cozy movie at home 🎬",
-    "Cocktails out 🍸",
-    "Board game night 🎲",
+    "fun at home games 🎲",
     "Early cuddle + sleep 😴",
   ];
 
@@ -162,12 +185,20 @@ function Choices() {
         <div class="pills" id="evening"></div>
       </div>
 
+      <div style="margin-top:18px;">
+        <p><strong>Anything else you’d love? 💭</strong></p>
+        <input
+          id="customInput"
+          class="text-input"
+          type="text"
+          placeholder="Write something here..."
+        />
+      </div>
+      
       <div class="row" style="margin-top:18px;">
         <button class="ghost" id="backBtn">Back</button>
         <button class="primary" id="finishBtn">Finish 💌</button>
       </div>
-
-      <p class="small">You can change choices anytime before finishing.</p>
     </div>
   `);
 
@@ -189,6 +220,14 @@ function Choices() {
   mountPills("#activity", "activity", actOpts);
   mountPills("#evening", "evening", eveOpts);
 
+  const input = node.querySelector("#customInput");
+  input.value = state.choices.custom || "";
+
+  input.addEventListener("input", (e) => {
+    state.choices.custom = e.target.value;
+  });
+
+
   node.querySelector("#backBtn").addEventListener("click", () => {
     state.step = 1;
     render();
@@ -203,20 +242,25 @@ function Choices() {
 }
 
 function Summary() {
-  const { lunch, activity, evening } = state.choices;
+  const { lunch, activity, evening, custom } = state.choices;
 
   const missing = [];
   if (!lunch) missing.push("Lunch");
   if (!activity) missing.push("After lunch");
   if (!evening) missing.push("Evening");
 
-  const summaryText =
+  let summaryText =
     missing.length > 0
       ? `Almost done 😄 Pick: ${missing.join(", ")}`
       : `Our plan:
 • Lunch: ${lunch}
 • After lunch: ${activity}
 • Evening: ${evening}`;
+
+  // ✅ ADD CUSTOM TEXT IF EXISTS
+  if (custom && custom.trim() !== "") {
+    summaryText += `\n• Extra request: ${custom.trim()}`;
+  }
 
   const waText = `Valentine plan ❤️\n${summaryText}\n\nI choose YES 😌`;
   const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
@@ -234,7 +278,7 @@ function Summary() {
         <button class="primary" id="waBtn">Send on WhatsApp</button>
       </div>
 
-      <p class="small">PS: I love you. Thank you for always being my person. ❤️</p>
+      <p class="small">I love you mi amorcito❤️</p>
     </div>
   `);
 
@@ -244,13 +288,11 @@ function Summary() {
   });
 
   async function copyText(text) {
-    // 1) Modern clipboard (works on https or localhost)
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
       return true;
     }
 
-    // 2) Fallback for older/blocked cases
     const ta = document.createElement("textarea");
     ta.value = text;
     ta.style.position = "fixed";
